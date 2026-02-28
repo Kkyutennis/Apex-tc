@@ -6,111 +6,67 @@
   <title>APEX-TC</title>
   <style>
     :root{
-      --bg:#070b16;
-      --card: rgba(255,255,255,.06);
-      --line: rgba(255,255,255,.10);
-      --text:#eaf0ff;
-      --muted: rgba(234,240,255,.70);
-      --accent:#7c5cff;
-      --good:#33d17a;
-      --bad:#ff5c7a;
-      --shadow: 0 20px 50px rgba(0,0,0,.45);
-      --radius: 18px;
+      --bg:#070b16; --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.10);
+      --text:#eaf0ff; --muted: rgba(234,240,255,.70);
+      --accent:#7c5cff; --good:#33d17a; --bad:#ff5c7a;
+      --shadow: 0 20px 50px rgba(0,0,0,.45); --radius: 18px;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family: var(--sans);
-      color: var(--text);
+      margin:0; font-family: var(--sans); color: var(--text); min-height:100vh;
       background:
         radial-gradient(1100px 500px at 20% 10%, rgba(124,92,255,.25), transparent 55%),
         radial-gradient(900px 500px at 85% 35%, rgba(51,209,122,.18), transparent 55%),
         var(--bg);
-      min-height:100vh;
     }
-    .wrap{max-width:980px; margin:0 auto; padding:36px 18px 60px;}
-    header{
-      display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
-      margin-bottom:18px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:34px;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      line-height:1.05;
-    }
-    .brand .sub{
-      margin-top:8px;
-      color: var(--muted);
-      font-size:14px;
-    }
+    .wrap{max-width:1020px; margin:0 auto; padding:36px 18px 60px;}
+    header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px;}
+    .brand h1{margin:0; font-size:34px; letter-spacing:1px; text-transform:uppercase; line-height:1.05;}
+    .brand .sub{margin-top:8px; color: var(--muted); font-size:14px;}
     .pill{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:13px;
-      color: var(--muted);
-      display:inline-flex; gap:8px; align-items:center;
-      box-shadow: var(--shadow);
-      height: fit-content;
-      white-space:nowrap;
+      border:1px solid var(--line); background: rgba(255,255,255,.05);
+      padding:10px 12px; border-radius:999px; font-size:13px; color: var(--muted);
+      display:inline-flex; gap:8px; align-items:center; box-shadow: var(--shadow);
+      height: fit-content; white-space:nowrap;
     }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
+    .grid{display:grid; grid-template-columns: 1fr 1.2fr; gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} header{flex-direction:column;} }
     .card{
-      border:1px solid var(--line);
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:18px;
-      backdrop-filter: blur(10px);
+      border:1px solid var(--line); background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding:18px; backdrop-filter: blur(10px);
     }
     .card h2{margin:0 0 10px; font-size:16px;}
     .hint{color:var(--muted); font-size:13px; line-height:1.5;}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
     label{display:block; font-size:12px; color: var(--muted); margin:10px 0 6px;}
     input{
-      width:100%;
-      padding:11px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      outline:none;
+      width:100%; padding:11px 12px; border-radius:14px; border:1px solid var(--line);
+      background: rgba(0,0,0,.25); color: var(--text); outline:none;
     }
-    input::placeholder{color: rgba(234,240,255,.35);}
     .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    @media (max-width: 600px){ .two{grid-template-columns:1fr;} header{flex-direction:column;} }
+    @media (max-width: 600px){ .two{grid-template-columns:1fr;} }
     button{
-      padding:11px 12px;
-      border-radius:14px;
-      border:1px solid rgba(124,92,255,.55);
-      background: rgba(124,92,255,.18);
-      color: var(--text);
-      cursor:pointer;
+      padding:11px 12px; border-radius:14px; border:1px solid rgba(124,92,255,.55);
+      background: rgba(124,92,255,.18); color: var(--text); cursor:pointer;
       transition: .15s transform, .15s opacity, .15s background;
     }
     button:hover{transform: translateY(-1px); background: rgba(124,92,255,.25);}
     button:active{transform: translateY(0px); opacity:.92;}
-    .secondary{
-      border-color: rgba(255,255,255,.20);
-      background: rgba(255,255,255,.07);
-    }
+    .secondary{border-color: rgba(255,255,255,.20); background: rgba(255,255,255,.07);}
     .good{border-color: rgba(51,209,122,.55); background: rgba(51,209,122,.12);}
     .danger{border-color: rgba(255,92,122,.55); background: rgba(255,92,122,.12);}
     .msg{margin-top:10px; font-size:13px;}
     .msg.good{color: var(--good)}
     .msg.bad{color: var(--bad)}
-    .small{color: var(--muted); font-size:12px;}
+    table{width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;}
+    th, td{padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+    th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;}
     .mono{font-family: var(--mono);}
-    .hide{display:none !important;}
+    .tag{display:inline-flex; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
+      color:var(--muted); font-size:12px; background:rgba(0,0,0,.18);}
+    .small{color:var(--muted); font-size:12px;}
   </style>
 </head>
 <body>
@@ -121,36 +77,18 @@
         <div class="sub">Seoul National Tennis King.</div>
       </div>
       <div class="pill">
-        <span>상태:</span>
-        <strong id="statusText">로그인 필요</strong>
+        <span>실시간 동기화:</span>
+        <strong id="syncText">연결 중…</strong>
+        <span class="tag" id="countTag">0 players</span>
       </div>
     </header>
 
     <div class="grid">
-
-      <!-- 로그인 카드 -->
-      <section class="card" id="authCard">
-        <h2>로그인 (매직 링크)</h2>
+      <!-- 참가자 등록 -->
+      <section class="card">
+        <h2>참가자 등록</h2>
         <p class="hint">
-          이메일을 입력하면 로그인 링크가 메일로 갑니다. 비밀번호 없이 접속해요.<br/>
-          <span class="small">* 같은 링크를 공유해도, 각자 로그인해야 본인 정보만 저장/수정됩니다.</span>
-        </p>
-
-        <label>이메일</label>
-        <input id="email" type="email" placeholder="name@example.com" />
-
-        <div class="row" style="margin-top:12px;">
-          <button id="sendLinkBtn">로그인 링크 보내기</button>
-        </div>
-
-        <div class="msg" id="authMsg"></div>
-      </section>
-
-      <!-- 프로필 카드 -->
-      <section class="card hide" id="profileCard">
-        <h2>내 프로필 입력</h2>
-        <p class="hint">
-          아래 정보는 “참가자”로 기록될 기본 정보가 됩니다. 본인 계정으로 1개만 저장돼요(수정하면 덮어쓰기).
+          로그인 없이 누구나 참가자를 추가/수정/삭제할 수 있어요. (동호회 내부 링크 공유 전제)
         </p>
 
         <div class="two">
@@ -175,26 +113,48 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top:14px;">
-          <button class="good" id="saveBtn">저장 / 업데이트</button>
-          <button class="secondary" id="reloadBtn">DB에서 다시 불러오기</button>
-          <button class="danger" id="logoutBtn">로그아웃</button>
+        <div class="row" style="margin-top:14px; justify-content:flex-start;">
+          <button class="good" id="addBtn">추가</button>
+          <button class="secondary" id="clearBtn">입력칸 비우기</button>
         </div>
 
-        <div class="msg" id="profileMsg"></div>
+        <div class="msg" id="formMsg"></div>
         <div class="small" style="margin-top:8px;">
-          내 UID: <span class="mono" id="uidText">-</span>
+          다음 단계에서 이 참가자 목록을 “경기 참가자 선택”에 그대로 연결할 거야.
         </div>
       </section>
 
+      <!-- 참가자 목록 -->
+      <section class="card">
+        <h2>참가자 목록</h2>
+        <p class="hint">다른 사람이 수정하면 여기 목록도 자동으로 갱신돼요.</p>
+
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>학교</th>
+                <th>나이</th>
+                <th>선수</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="secondary" id="refreshBtn">수동 새로고침</button>
+        </div>
+      </section>
     </div>
   </div>
 
-  <!-- Supabase JS (CDN) -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ 여기 2개를 네 Supabase 값으로 바꿔줘
+    // ✅ 너의 값으로 교체
     const SUPABASE_URL = "https://bojzlfjtjzpdyhcyzzvu.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_u-o3XzuBwFRbG2woRNsPkA_GPlLIdE2";
 
@@ -202,160 +162,168 @@
 
     const el = (id) => document.getElementById(id);
 
-    const statusText = el("statusText");
-
-    const authCard = el("authCard");
-    const profileCard = el("profileCard");
-
-    const authMsg = el("authMsg");
-    const profileMsg = el("profileMsg");
-
-    const emailInput = el("email");
+    const syncText = el("syncText");
+    const countTag = el("countTag");
 
     const nameInput = el("name");
     const schoolInput = el("school");
     const ageInput = el("age");
     const favInput = el("fav");
 
-    const uidText = el("uidText");
+    const formMsg = el("formMsg");
+    const tbody = el("tbody");
 
-    function setAuthMsg(text, type=""){
-      authMsg.className = "msg " + type;
-      authMsg.textContent = text;
-    }
-    function setProfileMsg(text, type=""){
-      profileMsg.className = "msg " + type;
-      profileMsg.textContent = text;
+    function setMsg(text, type=""){
+      formMsg.className = "msg " + type;
+      formMsg.textContent = text;
     }
 
-    function showLoggedOut(){
-      statusText.textContent = "로그인 필요";
-      authCard.classList.remove("hide");
-      profileCard.classList.add("hide");
-      setAuthMsg("");
-      setProfileMsg("");
-      uidText.textContent = "-";
+    function escapeHTML(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
     }
 
-    function showLoggedIn(user){
-      statusText.textContent = "로그인됨";
-      authCard.classList.add("hide");
-      profileCard.classList.remove("hide");
-      uidText.textContent = user.id;
-      setAuthMsg("");
-      setProfileMsg("");
-    }
-
-    async function sendMagicLink(){
-      const email = emailInput.value.trim();
-      if(!email){
-        setAuthMsg("이메일을 입력해줘.", "bad");
-        return;
-      }
-      setAuthMsg("링크 보내는 중...", "");
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          // 배포 후에는 여기를 배포 URL로 바꾸면 더 깔끔함
-          emailRedirectTo: window.location.href
-        }
-      });
-      if(error){
-        setAuthMsg("실패: " + error.message, "bad");
-        return;
-      }
-      setAuthMsg("메일로 로그인 링크를 보냈어! 메일함 확인해줘.", "good");
-    }
-
-    async function loadMyProfile(){
-      const { data: { user } } = await supabase.auth.getUser();
-      if(!user) return;
-
-      setProfileMsg("내 프로필 불러오는 중...", "");
+    async function fetchPlayers(){
       const { data, error } = await supabase
-        .from("profiles")
-        .select("name, school, age, favorite_player")
-        .eq("id", user.id)
-        .maybeSingle();
+        .from("players")
+        .select("id, name, school, age, favorite_player, updated_at")
+        .order("updated_at", { ascending: false });
 
       if(error){
-        setProfileMsg("불러오기 실패: " + error.message, "bad");
-        return;
+        syncText.textContent = "연결 오류";
+        console.error(error);
+        return [];
       }
-
-      if(!data){
-        setProfileMsg("아직 저장된 프로필이 없어. 입력 후 저장해줘.", "");
-        nameInput.value = "";
-        schoolInput.value = "";
-        ageInput.value = "";
-        favInput.value = "";
-        return;
-      }
-
-      nameInput.value = data.name ?? "";
-      schoolInput.value = data.school ?? "";
-      ageInput.value = data.age ?? "";
-      favInput.value = data.favorite_player ?? "";
-      setProfileMsg("불러오기 완료.", "good");
+      return data ?? [];
     }
 
-    async function saveMyProfile(){
-      const { data: { user } } = await supabase.auth.getUser();
-      if(!user) return;
+    function render(players){
+      countTag.textContent = `${players.length} players`;
+      tbody.innerHTML = "";
 
+      for(const p of players){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.name)}</strong></td>
+          <td>${escapeHTML(p.school)}</td>
+          <td class="mono">${escapeHTML(p.age)}</td>
+          <td>${escapeHTML(p.favorite_player)}</td>
+          <td>
+            <button class="secondary" data-action="edit" data-id="${p.id}">수정</button>
+            <button class="danger" data-action="delete" data-id="${p.id}">삭제</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // 이벤트 위임
+      tbody.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const action = btn.getAttribute("data-action");
+          const id = btn.getAttribute("data-id");
+
+          if(action === "delete"){
+            if(!confirm("정말 삭제할까요?")) return;
+            const { error } = await supabase.from("players").delete().eq("id", id);
+            if(error) alert("삭제 실패: " + error.message);
+            return;
+          }
+
+          if(action === "edit"){
+            // 아주 단순한 편집 UX: prompt로 값 받기 (다음 단계에서 모달로 예쁘게 바꿔도 됨)
+            const row = btn.closest("tr").children;
+            const curName = row[0].innerText.trim();
+            const curSchool = row[1].innerText.trim();
+            const curAge = Number(row[2].innerText.trim());
+            const curFav = row[3].innerText.trim();
+
+            const newName = prompt("이름", curName);
+            if(newName === null) return;
+            const newSchool = prompt("학교", curSchool);
+            if(newSchool === null) return;
+            const newAgeStr = prompt("나이", String(curAge));
+            if(newAgeStr === null) return;
+            const newFav = prompt("좋아하는 선수", curFav);
+            if(newFav === null) return;
+
+            const newAge = Number(newAgeStr);
+            if(!newName.trim() || !newSchool.trim() || !newFav.trim() || !Number.isFinite(newAge)){
+              alert("값이 올바르지 않아.");
+              return;
+            }
+
+            const { error } = await supabase
+              .from("players")
+              .update({ name: newName.trim(), school: newSchool.trim(), age: newAge, favorite_player: newFav.trim() })
+              .eq("id", id);
+
+            if(error) alert("수정 실패: " + error.message);
+            return;
+          }
+        });
+      });
+    }
+
+    async function refresh(){
+      syncText.textContent = "동기화 중…";
+      const players = await fetchPlayers();
+      render(players);
+      syncText.textContent = "ON";
+    }
+
+    async function addPlayer(){
       const name = nameInput.value.trim();
       const school = schoolInput.value.trim();
       const age = Number(ageInput.value);
       const favorite_player = favInput.value.trim();
 
       if(!name || !school || !favorite_player || !Number.isFinite(age)){
-        setProfileMsg("모든 항목을 정확히 입력해줘(나이는 숫자).", "bad");
+        setMsg("모든 항목을 정확히 입력해줘(나이는 숫자).", "bad");
         return;
       }
 
-      setProfileMsg("저장 중...", "");
+      setMsg("추가 중…");
       const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id, name, school, age, favorite_player
-        });
+        .from("players")
+        .insert({ name, school, age, favorite_player });
 
       if(error){
-        setProfileMsg("저장 실패: " + error.message, "bad");
+        setMsg("추가 실패: " + error.message, "bad");
         return;
       }
 
-      setProfileMsg("저장 완료! (본인 정보가 업데이트됨)", "good");
+      setMsg("추가 완료! (다른 사람 화면에도 곧 반영됨)", "good");
+      nameInput.value = "";
+      schoolInput.value = "";
+      ageInput.value = "";
+      favInput.value = "";
     }
 
-    async function logout(){
-      await supabase.auth.signOut();
-      showLoggedOut();
-    }
-
-    // 이벤트 연결
-    el("sendLinkBtn").addEventListener("click", sendMagicLink);
-    el("saveBtn").addEventListener("click", saveMyProfile);
-    el("reloadBtn").addEventListener("click", loadMyProfile);
-    el("logoutBtn").addEventListener("click", logout);
-
-    // 초기 로그인 상태 체크 + 상태 변경 감지
-    const { data: { session } } = await supabase.auth.getSession();
-    if(session?.user){
-      showLoggedIn(session.user);
-      await loadMyProfile();
-    }else{
-      showLoggedOut();
-    }
-
-    supabase.auth.onAuthStateChange(async (_event, session2) => {
-      if(session2?.user){
-        showLoggedIn(session2.user);
-        await loadMyProfile();
-      }else{
-        showLoggedOut();
-      }
+    // 버튼 연결
+    el("addBtn").addEventListener("click", addPlayer);
+    el("clearBtn").addEventListener("click", ()=>{
+      nameInput.value = "";
+      schoolInput.value = "";
+      ageInput.value = "";
+      favInput.value = "";
+      setMsg("");
     });
+    el("refreshBtn").addEventListener("click", refresh);
+
+    // ✅ 실시간 반영 (Supabase Realtime)
+    const channel = supabase.channel("players-realtime")
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "players" },
+        (_payload) => refresh()
+      )
+      .subscribe((status) => {
+        // status: SUBSCRIBED 등
+        if(status === "SUBSCRIBED") syncText.textContent = "ON";
+      });
+
+    // 초기 로딩
+    await refresh();
   </script>
 </body>
 </html>
