@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>APEX-TC | Match</title>
+  <style>
+    :root{
+      --bg:#070b16; --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.10);
+      --text:#eaf0ff; --muted: rgba(234,240,255,.70);
+      --accent:#7c5cff; --good:#33d17a; --bad:#ff5c7a;
+      --shadow: 0 20px 50px rgba(0,0,0,.45); --radius: 18px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text); min-height:100vh;
+      background:
+        radial-gradient(1100px 500px at 20% 10%, rgba(124,92,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 85% 35%, rgba(51,209,122,.18), transparent 55%),
+        var(--bg);
+    }
+    .wrap{max-width:900px; margin:0 auto; padding:20px 16px 60px;}
+    header{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+    h1{margin:0; font-size:18px;}
+    .pill{border:1px solid var(--line); background:rgba(255,255,255,.05); padding:8px 10px; border-radius:999px; color:var(--muted); font-size:13px;}
+    .card{
+      margin-top:12px;
+      border:1px solid var(--line); background:var(--card); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:16px; backdrop-filter: blur(10px);
+    }
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
+    select,input{
+      width:100%; padding:11px 12px; border-radius:14px; border:1px solid var(--line);
+      background: rgba(0,0,0,.25); color:var(--text); outline:none;
+    }
+    .two{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media(max-width:600px){ .two{grid-template-columns:1fr;} }
+    button{
+      padding:11px 12px; border-radius:14px; border:1px solid rgba(124,92,255,.55);
+      background: rgba(124,92,255,.18); color: var(--text); cursor:pointer;
+    }
+    .secondary{border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08);}
+    .good{border-color: rgba(51,209,122,.55); background: rgba(51,209,122,.12);}
+    .msg{margin-top:10px; font-size:13px;}
+    .msg.good{color:var(--good)} .msg.bad{color:var(--bad)}
+    .hint{color:var(--muted); font-size:13px; line-height:1.5;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <button class="secondary" onclick="location.href='index.html'">← 홈</button>
+      <h1 id="title">Match</h1>
+      <div class="pill" id="sync">players: loading…</div>
+    </header>
+
+    <div class="card">
+      <div class="hint">
+        참가자를 선택하고 세트 스코어(2:0 또는 2:1 등)를 입력하면 저장됩니다.
+      </div>
+
+      <div id="singlesBlock">
+        <div class="two">
+          <div>
+            <label>Player A</label>
+            <select id="sA"></select>
+          </div>
+          <div>
+            <label>Player B</label>
+            <select id="sB"></select>
+          </div>
+        </div>
+      </div>
+
+      <div id="doublesBlock" style="display:none;">
+        <div class="two">
+          <div><label>Team A - 1</label><select id="dA1"></select></div>
+          <div><label>Team A - 2</label><select id="dA2"></select></div>
+        </div>
+        <div class="two" style="margin-top:8px;">
+          <div><label>Team B - 1</label><select id="dB1"></select></div>
+          <div><label>Team B - 2</label><select id="dB2"></select></div>
+        </div>
+      </div>
+
+      <div class="two" style="margin-top:10px;">
+        <div>
+          <label>Sets A</label>
+          <input id="setsA" type="number" min="0" max="2" placeholder="예: 2" />
+        </div>
+        <div>
+          <label>Sets B</label>
+          <input id="setsB" type="number" min="0" max="2" placeholder="예: 1" />
+        </div>
+      </div>
+
+      <div class="two" style="margin-top:12px;">
+        <button class="good" id="saveBtn">저장</button>
+        <button class="secondary" onclick="location.href='players.html'">참가자 관리로</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://bojzlfjtjzpdyhcyzzvu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u-o3XzuBwFRbG2woRNsPkA_GPlLIdE2";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id)=>document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const mode = (params.get("mode") || "singles").toLowerCase();
+
+    const title = $("title");
+    const sync = $("sync");
+    const msg = $("msg");
+
+    const singlesBlock = $("singlesBlock");
+    const doublesBlock = $("doublesBlock");
+
+    function setMsg(text, kind=""){
+      msg.className = "msg " + kind;
+      msg.textContent = text;
+    }
+
+    function fillSelect(sel, players){
+      sel.innerHTML = `<option value="">— 선택 —</option>`;
+      for(const p of players){
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      }
+    }
+
+    async function loadPlayers(){
+      const { data, error } = await supabase
+        .from("players")
+        .select("id, name")
+        .order("name", { ascending: true });
+
+      if(error){
+        sync.textContent = "players: error";
+        console.error(error);
+        return [];
+      }
+      sync.textContent = `players: ${data.length}`;
+      return data;
+    }
+
+    function validateSets(a,b){
+      if(!Number.isFinite(a) || !Number.isFinite(b)) return "세트 점수를 입력해줘.";
+      if(a === b) return "무승부는 안 돼.";
+      if(a<0||b<0||a>2||b>2) return "세트는 0~2 범위야.";
+      if(!(a===2 || b===2)) return "승자는 2세트를 가져야 해.";
+      return null;
+    }
+
+    function allUnique(arr){
+      const clean = arr.filter(Boolean);
+      return new Set(clean).size === clean.length;
+    }
+
+    async function saveMatch(){
+      const setsA = Number($("setsA").value);
+      const setsB = Number($("setsB").value);
+      const err = validateSets(setsA, setsB);
+      if(err){ setMsg(err, "bad"); return; }
+
+      let team_a=[], team_b=[];
+      if(mode === "singles"){
+        const A = $("sA").value, B = $("sB").value;
+        if(!A || !B) { setMsg("플레이어 A/B를 선택해줘.", "bad"); return; }
+        if(A===B) { setMsg("같은 사람을 둘 다 선택할 수 없어.", "bad"); return; }
+        team_a=[A]; team_b=[B];
+      }else{
+        const A1=$("dA1").value, A2=$("dA2").value, B1=$("dB1").value, B2=$("dB2").value;
+        if(!A1||!A2||!B1||!B2){ setMsg("더블은 4명을 모두 선택해줘.", "bad"); return; }
+        if(!allUnique([A1,A2,B1,B2])){ setMsg("더블에서 같은 사람을 중복 선택할 수 없어.", "bad"); return; }
+        team_a=[A1,A2]; team_b=[B1,B2];
+      }
+
+      setMsg("저장 중…");
+      const { error } = await supabase.from("matches").insert({
+        mode,
+        team_a,
+        team_b,
+        sets_a: setsA,
+        sets_b: setsB
+      });
+
+      if(error){
+        setMsg("저장 실패: " + error.message, "bad");
+        return;
+      }
+      setMsg("저장 완료!", "good");
+      $("setsA").value=""; $("setsB").value="";
+      // 선택은 유지(연속 입력 편하게)
+    }
+
+    // 화면 초기화
+    if(mode === "doubles"){
+      title.textContent = "Doubles Match";
+      singlesBlock.style.display = "none";
+      doublesBlock.style.display = "block";
+    }else{
+      title.textContent = "Singles Match";
+      singlesBlock.style.display = "block";
+      doublesBlock.style.display = "none";
+    }
+
+    // players 로드 후 select 채우기
+    const players = await loadPlayers();
+    fillSelect($("sA"), players); fillSelect($("sB"), players);
+    fillSelect($("dA1"), players); fillSelect($("dA2"), players);
+    fillSelect($("dB1"), players); fillSelect($("dB2"), players);
+
+    $("saveBtn").addEventListener("click", saveMatch);
+  </script>
+</body>
+</html>
