@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>APEX-TC</title>
+  <style>
+    :root{
+      --bg:#070b16; --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.10);
+      --text:#eaf0ff; --muted: rgba(234,240,255,.70);
+      --accent:#7c5cff; --good:#33d17a; --bad:#ff5c7a;
+      --shadow: 0 20px 50px rgba(0,0,0,.45); --radius: 18px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: var(--sans); color: var(--text); min-height:100vh;
+      background:
+        radial-gradient(1100px 500px at 20% 10%, rgba(124,92,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 85% 35%, rgba(51,209,122,.18), transparent 55%),
+        var(--bg);
+    }
+    .wrap{max-width:1020px; margin:0 auto; padding:36px 18px 60px;}
+    header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px;}
+    .brand h1{margin:0; font-size:34px; letter-spacing:1px; text-transform:uppercase; line-height:1.05;}
+    .brand .sub{margin-top:8px; color: var(--muted); font-size:14px;}
+    .pill{
+      border:1px solid var(--line); background: rgba(255,255,255,.05);
+      padding:10px 12px; border-radius:999px; font-size:13px; color: var(--muted);
+      display:inline-flex; gap:8px; align-items:center; box-shadow: var(--shadow);
+      height: fit-content; white-space:nowrap;
+    }
+    .grid{display:grid; grid-template-columns: 1fr 1.2fr; gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} header{flex-direction:column;} }
+    .card{
+      border:1px solid var(--line); background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding:18px; backdrop-filter: blur(10px);
+    }
+    .card h2{margin:0 0 10px; font-size:16px;}
+    .hint{color:var(--muted); font-size:13px; line-height:1.5;}
+    label{display:block; font-size:12px; color: var(--muted); margin:10px 0 6px;}
+    input{
+      width:100%; padding:11px 12px; border-radius:14px; border:1px solid var(--line);
+      background: rgba(0,0,0,.25); color: var(--text); outline:none;
+    }
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 600px){ .two{grid-template-columns:1fr;} }
+    button{
+      padding:11px 12px; border-radius:14px; border:1px solid rgba(124,92,255,.55);
+      background: rgba(124,92,255,.18); color: var(--text); cursor:pointer;
+      transition: .15s transform, .15s opacity, .15s background;
+    }
+    button:hover{transform: translateY(-1px); background: rgba(124,92,255,.25);}
+    button:active{transform: translateY(0px); opacity:.92;}
+    .secondary{border-color: rgba(255,255,255,.20); background: rgba(255,255,255,.07);}
+    .good{border-color: rgba(51,209,122,.55); background: rgba(51,209,122,.12);}
+    .danger{border-color: rgba(255,92,122,.55); background: rgba(255,92,122,.12);}
+    .msg{margin-top:10px; font-size:13px;}
+    .msg.good{color: var(--good)}
+    .msg.bad{color: var(--bad)}
+    table{width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;}
+    th, td{padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+    th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;}
+    .mono{font-family: var(--mono);}
+    .tag{display:inline-flex; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
+      color:var(--muted); font-size:12px; background:rgba(0,0,0,.18);}
+    .small{color:var(--muted); font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>APEX-TC</h1>
+        <div class="sub">Seoul National Tennis King.</div>
+      </div>
+      <div class="pill">
+        <span>실시간 동기화:</span>
+        <strong id="syncText">연결 중…</strong>
+        <span class="tag" id="countTag">0 players</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- 참가자 등록 -->
+      <section class="card">
+        <h2>참가자 등록</h2>
+        <p class="hint">
+          로그인 없이 누구나 참가자를 추가/수정/삭제할 수 있어요. (동호회 내부 링크 공유 전제)
+        </p>
+
+        <div class="two">
+          <div>
+            <label>이름</label>
+            <input id="name" placeholder="예: 김승규" />
+          </div>
+          <div>
+            <label>학교</label>
+            <input id="school" placeholder="예: Seoul National University" />
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <label>나이</label>
+            <input id="age" type="number" min="0" max="120" placeholder="예: 24" />
+          </div>
+          <div>
+            <label>좋아하는 테니스 선수</label>
+            <input id="fav" placeholder="예: Federer" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:14px; justify-content:flex-start;">
+          <button class="good" id="addBtn">추가</button>
+          <button class="secondary" id="clearBtn">입력칸 비우기</button>
+        </div>
+
+        <div class="msg" id="formMsg"></div>
+        <div class="small" style="margin-top:8px;">
+          다음 단계에서 이 참가자 목록을 “경기 참가자 선택”에 그대로 연결할 거야.
+        </div>
+      </section>
+
+      <!-- 참가자 목록 -->
+      <section class="card">
+        <h2>참가자 목록</h2>
+        <p class="hint">다른 사람이 수정하면 여기 목록도 자동으로 갱신돼요.</p>
+
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>학교</th>
+                <th>나이</th>
+                <th>선수</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="secondary" id="refreshBtn">수동 새로고침</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ✅ 너의 값으로 교체
+    const SUPABASE_URL = "https://bojzlfjtjzpdyhcyzzvu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u-o3XzuBwFRbG2woRNsPkA_GPlLIdE2";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const el = (id) => document.getElementById(id);
+
+    const syncText = el("syncText");
+    const countTag = el("countTag");
+
+    const nameInput = el("name");
+    const schoolInput = el("school");
+    const ageInput = el("age");
+    const favInput = el("fav");
+
+    const formMsg = el("formMsg");
+    const tbody = el("tbody");
+
+    function setMsg(text, type=""){
+      formMsg.className = "msg " + type;
+      formMsg.textContent = text;
+    }
+
+    function escapeHTML(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    async function fetchPlayers(){
+      const { data, error } = await supabase
+        .from("players")
+        .select("id, name, school, age, favorite_player, updated_at")
+        .order("updated_at", { ascending: false });
+
+      if(error){
+        syncText.textContent = "연결 오류";
+        console.error(error);
+        return [];
+      }
+      return data ?? [];
+    }
+
+    function render(players){
+      countTag.textContent = `${players.length} players`;
+      tbody.innerHTML = "";
+
+      for(const p of players){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.name)}</strong></td>
+          <td>${escapeHTML(p.school)}</td>
+          <td class="mono">${escapeHTML(p.age)}</td>
+          <td>${escapeHTML(p.favorite_player)}</td>
+          <td>
+            <button class="secondary" data-action="edit" data-id="${p.id}">수정</button>
+            <button class="danger" data-action="delete" data-id="${p.id}">삭제</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // 이벤트 위임
+      tbody.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const action = btn.getAttribute("data-action");
+          const id = btn.getAttribute("data-id");
+
+          if(action === "delete"){
+            if(!confirm("정말 삭제할까요?")) return;
+            const { error } = await supabase.from("players").delete().eq("id", id);
+            if(error) alert("삭제 실패: " + error.message);
+            return;
+          }
+
+          if(action === "edit"){
+            // 아주 단순한 편집 UX: prompt로 값 받기 (다음 단계에서 모달로 예쁘게 바꿔도 됨)
+            const row = btn.closest("tr").children;
+            const curName = row[0].innerText.trim();
+            const curSchool = row[1].innerText.trim();
+            const curAge = Number(row[2].innerText.trim());
+            const curFav = row[3].innerText.trim();
+
+            const newName = prompt("이름", curName);
+            if(newName === null) return;
+            const newSchool = prompt("학교", curSchool);
+            if(newSchool === null) return;
+            const newAgeStr = prompt("나이", String(curAge));
+            if(newAgeStr === null) return;
+            const newFav = prompt("좋아하는 선수", curFav);
+            if(newFav === null) return;
+
+            const newAge = Number(newAgeStr);
+            if(!newName.trim() || !newSchool.trim() || !newFav.trim() || !Number.isFinite(newAge)){
+              alert("값이 올바르지 않아.");
+              return;
+            }
+
+            const { error } = await supabase
+              .from("players")
+              .update({ name: newName.trim(), school: newSchool.trim(), age: newAge, favorite_player: newFav.trim() })
+              .eq("id", id);
+
+            if(error) alert("수정 실패: " + error.message);
+            return;
+          }
+        });
+      });
+    }
+
+    async function refresh(){
+      syncText.textContent = "동기화 중…";
+      const players = await fetchPlayers();
+      render(players);
+      syncText.textContent = "ON";
+    }
+
+    async function addPlayer(){
+      const name = nameInput.value.trim();
+      const school = schoolInput.value.trim();
+      const age = Number(ageInput.value);
+      const favorite_player = favInput.value.trim();
+
+      if(!name || !school || !favorite_player || !Number.isFinite(age)){
+        setMsg("모든 항목을 정확히 입력해줘(나이는 숫자).", "bad");
+        return;
+      }
+
+      setMsg("추가 중…");
+      const { error } = await supabase
+        .from("players")
+        .insert({ name, school, age, favorite_player });
+
+      if(error){
+        setMsg("추가 실패: " + error.message, "bad");
+        return;
+      }
+
+      setMsg("추가 완료! (다른 사람 화면에도 곧 반영됨)", "good");
+      nameInput.value = "";
+      schoolInput.value = "";
+      ageInput.value = "";
+      favInput.value = "";
+    }
+
+    // 버튼 연결
+    el("addBtn").addEventListener("click", addPlayer);
+    el("clearBtn").addEventListener("click", ()=>{
+      nameInput.value = "";
+      schoolInput.value = "";
+      ageInput.value = "";
+      favInput.value = "";
+      setMsg("");
+    });
+    el("refreshBtn").addEventListener("click", refresh);
+
+    // ✅ 실시간 반영 (Supabase Realtime)
+    const channel = supabase.channel("players-realtime")
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "players" },
+        (_payload) => refresh()
+      )
+      .subscribe((status) => {
+        // status: SUBSCRIBED 등
+        if(status === "SUBSCRIBED") syncText.textContent = "ON";
+      });
+
+    // 초기 로딩
+    await refresh();
+  </script>
+</body>
+</html>
