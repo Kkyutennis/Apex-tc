@@ -58,7 +58,7 @@
 
     <div class="card">
       <div class="hint">
-        참가자를 선택하고 세트 스코어(2:0 또는 2:1 등)를 입력하면 저장됩니다.
+        한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).
       </div>
 
       <div id="singlesBlock">
@@ -87,12 +87,12 @@
 
       <div class="two" style="margin-top:10px;">
         <div>
-          <label>Sets A</label>
-          <input id="setsA" type="number" min="0" max="2" placeholder="예: 2" />
+          <label>Games A</label>
+          <input id="gamesA" type="number" min="0" max="7" placeholder="예: 6" />
         </div>
         <div>
-          <label>Sets B</label>
-          <input id="setsB" type="number" min="0" max="2" placeholder="예: 1" />
+          <label>Games B</label>
+          <input id="gamesB" type="number" min="0" max="7" placeholder="예: 3" />
         </div>
       </div>
 
@@ -153,11 +153,17 @@
       return data;
     }
 
-    function validateSets(a,b){
-      if(!Number.isFinite(a) || !Number.isFinite(b)) return "세트 점수를 입력해줘.";
+    function validateGames(a,b){
+      if(!Number.isFinite(a) || !Number.isFinite(b)) return "게임 스코어를 입력해줘.";
       if(a === b) return "무승부는 안 돼.";
-      if(a<0||b<0||a>2||b>2) return "세트는 0~2 범위야.";
-      if(!(a===2 || b===2)) return "승자는 2세트를 가져야 해.";
+      if(a < 0 || b < 0 || a > 7 || b > 7) return "게임은 0~7 범위로 입력해줘.";
+
+      const hi = Math.max(a,b), lo = Math.min(a,b);
+      const ok =
+        (hi === 6 && lo <= 4) ||
+        (hi === 7 && (lo === 5 || lo === 6));
+
+      if(!ok) return "가능한 한 세트 스코어 예: 6:3, 6:4, 7:5, 7:6";
       return null;
     }
 
@@ -167,9 +173,9 @@
     }
 
     async function saveMatch(){
-      const setsA = Number($("setsA").value);
-      const setsB = Number($("setsB").value);
-      const err = validateSets(setsA, setsB);
+      const gamesA = Number($("gamesA").value);
+      const gamesB = Number($("gamesB").value);
+      const err = validateGames(gamesA, gamesB);
       if(err){ setMsg(err, "bad"); return; }
 
       let team_a=[], team_b=[];
@@ -190,8 +196,8 @@
         mode,
         team_a,
         team_b,
-        sets_a: setsA,
-        sets_b: setsB
+        games_a: gamesA,
+        games_b: gamesB
       });
 
       if(error){
@@ -199,8 +205,7 @@
         return;
       }
       setMsg("저장 완료!", "good");
-      $("setsA").value=""; $("setsB").value="";
-      // 선택은 유지(연속 입력 편하게)
+      $("gamesA").value=""; $("gamesB").value="";
     }
 
     // 화면 초기화
@@ -214,7 +219,6 @@
       doublesBlock.style.display = "none";
     }
 
-    // players 로드 후 select 채우기
     const players = await loadPlayers();
     fillSelect($("sA"), players); fillSelect($("sB"), players);
     fillSelect($("dA1"), players); fillSelect($("dA2"), players);
