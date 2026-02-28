@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>APEX-TC</title>
+  <style>
+    :root{
+      --bg:#070b16;
+      --card: rgba(255,255,255,.06);
+      --line: rgba(255,255,255,.10);
+      --text:#eaf0ff;
+      --muted: rgba(234,240,255,.70);
+      --accent:#7c5cff;
+      --good:#33d17a;
+      --bad:#ff5c7a;
+      --shadow: 0 20px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1100px 500px at 20% 10%, rgba(124,92,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 85% 35%, rgba(51,209,122,.18), transparent 55%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{max-width:980px; margin:0 auto; padding:36px 18px 60px;}
+    header{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+      margin-bottom:18px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:34px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      line-height:1.05;
+    }
+    .brand .sub{
+      margin-top:8px;
+      color: var(--muted);
+      font-size:14px;
+    }
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:13px;
+      color: var(--muted);
+      display:inline-flex; gap:8px; align-items:center;
+      box-shadow: var(--shadow);
+      height: fit-content;
+      white-space:nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2{margin:0 0 10px; font-size:16px;}
+    .hint{color:var(--muted); font-size:13px; line-height:1.5;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    label{display:block; font-size:12px; color: var(--muted); margin:10px 0 6px;}
+    input{
+      width:100%;
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+    }
+    input::placeholder{color: rgba(234,240,255,.35);}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 600px){ .two{grid-template-columns:1fr;} header{flex-direction:column;} }
+    button{
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid rgba(124,92,255,.55);
+      background: rgba(124,92,255,.18);
+      color: var(--text);
+      cursor:pointer;
+      transition: .15s transform, .15s opacity, .15s background;
+    }
+    button:hover{transform: translateY(-1px); background: rgba(124,92,255,.25);}
+    button:active{transform: translateY(0px); opacity:.92;}
+    .secondary{
+      border-color: rgba(255,255,255,.20);
+      background: rgba(255,255,255,.07);
+    }
+    .good{border-color: rgba(51,209,122,.55); background: rgba(51,209,122,.12);}
+    .danger{border-color: rgba(255,92,122,.55); background: rgba(255,92,122,.12);}
+    .msg{margin-top:10px; font-size:13px;}
+    .msg.good{color: var(--good)}
+    .msg.bad{color: var(--bad)}
+    .small{color: var(--muted); font-size:12px;}
+    .mono{font-family: var(--mono);}
+    .hide{display:none !important;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>APEX-TC</h1>
+        <div class="sub">Seoul National Tennis King.</div>
+      </div>
+      <div class="pill">
+        <span>상태:</span>
+        <strong id="statusText">로그인 필요</strong>
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- 로그인 카드 -->
+      <section class="card" id="authCard">
+        <h2>로그인 (매직 링크)</h2>
+        <p class="hint">
+          이메일을 입력하면 로그인 링크가 메일로 갑니다. 비밀번호 없이 접속해요.<br/>
+          <span class="small">* 같은 링크를 공유해도, 각자 로그인해야 본인 정보만 저장/수정됩니다.</span>
+        </p>
+
+        <label>이메일</label>
+        <input id="email" type="email" placeholder="name@example.com" />
+
+        <div class="row" style="margin-top:12px;">
+          <button id="sendLinkBtn">로그인 링크 보내기</button>
+        </div>
+
+        <div class="msg" id="authMsg"></div>
+      </section>
+
+      <!-- 프로필 카드 -->
+      <section class="card hide" id="profileCard">
+        <h2>내 프로필 입력</h2>
+        <p class="hint">
+          아래 정보는 “참가자”로 기록될 기본 정보가 됩니다. 본인 계정으로 1개만 저장돼요(수정하면 덮어쓰기).
+        </p>
+
+        <div class="two">
+          <div>
+            <label>이름</label>
+            <input id="name" placeholder="예: 김승규" />
+          </div>
+          <div>
+            <label>학교</label>
+            <input id="school" placeholder="예: Seoul National University" />
+          </div>
+        </div>
+
+        <div class="two">
+          <div>
+            <label>나이</label>
+            <input id="age" type="number" min="0" max="120" placeholder="예: 24" />
+          </div>
+          <div>
+            <label>좋아하는 테니스 선수</label>
+            <input id="fav" placeholder="예: Federer" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <button class="good" id="saveBtn">저장 / 업데이트</button>
+          <button class="secondary" id="reloadBtn">DB에서 다시 불러오기</button>
+          <button class="danger" id="logoutBtn">로그아웃</button>
+        </div>
+
+        <div class="msg" id="profileMsg"></div>
+        <div class="small" style="margin-top:8px;">
+          내 UID: <span class="mono" id="uidText">-</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Supabase JS (CDN) -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ✅ 여기 2개를 네 Supabase 값으로 바꿔줘
+    const SUPABASE_URL = "https://bojzlfjtjzpdyhcyzzvu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u-o3XzuBwFRbG2woRNsPkA_GPlLIdE2";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const el = (id) => document.getElementById(id);
+
+    const statusText = el("statusText");
+
+    const authCard = el("authCard");
+    const profileCard = el("profileCard");
+
+    const authMsg = el("authMsg");
+    const profileMsg = el("profileMsg");
+
+    const emailInput = el("email");
+
+    const nameInput = el("name");
+    const schoolInput = el("school");
+    const ageInput = el("age");
+    const favInput = el("fav");
+
+    const uidText = el("uidText");
+
+    function setAuthMsg(text, type=""){
+      authMsg.className = "msg " + type;
+      authMsg.textContent = text;
+    }
+    function setProfileMsg(text, type=""){
+      profileMsg.className = "msg " + type;
+      profileMsg.textContent = text;
+    }
+
+    function showLoggedOut(){
+      statusText.textContent = "로그인 필요";
+      authCard.classList.remove("hide");
+      profileCard.classList.add("hide");
+      setAuthMsg("");
+      setProfileMsg("");
+      uidText.textContent = "-";
+    }
+
+    function showLoggedIn(user){
+      statusText.textContent = "로그인됨";
+      authCard.classList.add("hide");
+      profileCard.classList.remove("hide");
+      uidText.textContent = user.id;
+      setAuthMsg("");
+      setProfileMsg("");
+    }
+
+    async function sendMagicLink(){
+      const email = emailInput.value.trim();
+      if(!email){
+        setAuthMsg("이메일을 입력해줘.", "bad");
+        return;
+      }
+      setAuthMsg("링크 보내는 중...", "");
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // 배포 후에는 여기를 배포 URL로 바꾸면 더 깔끔함
+          emailRedirectTo: window.location.href
+        }
+      });
+      if(error){
+        setAuthMsg("실패: " + error.message, "bad");
+        return;
+      }
+      setAuthMsg("메일로 로그인 링크를 보냈어! 메일함 확인해줘.", "good");
+    }
+
+    async function loadMyProfile(){
+      const { data: { user } } = await supabase.auth.getUser();
+      if(!user) return;
+
+      setProfileMsg("내 프로필 불러오는 중...", "");
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("name, school, age, favorite_player")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if(error){
+        setProfileMsg("불러오기 실패: " + error.message, "bad");
+        return;
+      }
+
+      if(!data){
+        setProfileMsg("아직 저장된 프로필이 없어. 입력 후 저장해줘.", "");
+        nameInput.value = "";
+        schoolInput.value = "";
+        ageInput.value = "";
+        favInput.value = "";
+        return;
+      }
+
+      nameInput.value = data.name ?? "";
+      schoolInput.value = data.school ?? "";
+      ageInput.value = data.age ?? "";
+      favInput.value = data.favorite_player ?? "";
+      setProfileMsg("불러오기 완료.", "good");
+    }
+
+    async function saveMyProfile(){
+      const { data: { user } } = await supabase.auth.getUser();
+      if(!user) return;
+
+      const name = nameInput.value.trim();
+      const school = schoolInput.value.trim();
+      const age = Number(ageInput.value);
+      const favorite_player = favInput.value.trim();
+
+      if(!name || !school || !favorite_player || !Number.isFinite(age)){
+        setProfileMsg("모든 항목을 정확히 입력해줘(나이는 숫자).", "bad");
+        return;
+      }
+
+      setProfileMsg("저장 중...", "");
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id, name, school, age, favorite_player
+        });
+
+      if(error){
+        setProfileMsg("저장 실패: " + error.message, "bad");
+        return;
+      }
+
+      setProfileMsg("저장 완료! (본인 정보가 업데이트됨)", "good");
+    }
+
+    async function logout(){
+      await supabase.auth.signOut();
+      showLoggedOut();
+    }
+
+    // 이벤트 연결
+    el("sendLinkBtn").addEventListener("click", sendMagicLink);
+    el("saveBtn").addEventListener("click", saveMyProfile);
+    el("reloadBtn").addEventListener("click", loadMyProfile);
+    el("logoutBtn").addEventListener("click", logout);
+
+    // 초기 로그인 상태 체크 + 상태 변경 감지
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session?.user){
+      showLoggedIn(session.user);
+      await loadMyProfile();
+    }else{
+      showLoggedOut();
+    }
+
+    supabase.auth.onAuthStateChange(async (_event, session2) => {
+      if(session2?.user){
+        showLoggedIn(session2.user);
+        await loadMyProfile();
+      }else{
+        showLoggedOut();
+      }
+    });
+  </script>
+</body>
+</html>
