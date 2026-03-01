@@ -8,8 +8,10 @@
     :root{
       --bg:#070b16; --card: rgba(255,255,255,.07); --line: rgba(255,255,255,.10);
       --text:#eaf0ff; --muted: rgba(234,240,255,.70);
-      --accent:#7c5cff; --shadow: 0 20px 50px rgba(0,0,0,.45); --radius: 18px;
+      --accent:#7c5cff; --good:#33d17a; --bad:#ff5c7a;
+      --shadow: 0 20px 50px rgba(0,0,0,.45); --radius: 18px;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     *{box-sizing:border-box}
     body{
@@ -19,7 +21,7 @@
         radial-gradient(900px 500px at 85% 35%, rgba(51,209,122,.18), transparent 55%),
         var(--bg);
     }
-    .wrap{max-width:900px; margin:0 auto; padding:36px 18px 60px;}
+    .wrap{max-width:980px; margin:0 auto; padding:36px 18px 60px;}
     .brand h1{margin:0; font-size:34px; letter-spacing:1px; text-transform:uppercase;}
     .brand .sub{margin-top:8px; color:var(--muted); font-size:14px;}
     .card{
@@ -49,6 +51,41 @@
       font-size:15px;
     }
     .hint{color:var(--muted); font-size:13px; line-height:1.5; margin-top:8px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding:8px 10px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:13px;
+      display:inline-flex; gap:8px; align-items:center;
+      white-space:nowrap;
+    }
+    input{
+      width:100%;
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+    }
+    button.smallBtn{
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      cursor:pointer;
+    }
+    table{width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;}
+    th, td{padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top;}
+    th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px;}
+    .mono{font-family:var(--mono);}
+    .msg{margin-top:10px; font-size:13px;}
+    .msg.good{color:var(--good)} .msg.bad{color:var(--bad)}
+    .muted{color:var(--muted)}
   </style>
 </head>
 <body>
@@ -58,6 +95,7 @@
       <div class="sub">Seoul National Tennis King.</div>
     </div>
 
+    <!-- 모드 선택 -->
     <div class="card">
       <div class="hint">모드를 선택하면 다음 화면에서 바로 경기 결과를 입력할 수 있어요.</div>
       <button class="bigBtn" onclick="location.href='match.html?mode=singles'">🎾 Singles</button>
@@ -66,6 +104,147 @@
       <button class="bigBtn secondary" onclick="location.href='players.html'">👥 참가자 관리</button>
       <div class="hint">* 참가자(플레이어)를 먼저 등록해두면 경기 입력이 빨라져요.</div>
     </div>
+
+    <!-- 참가자 목록 -->
+    <div class="card">
+      <div class="row">
+        <div>
+          <div style="font-size:16px; font-weight:700;">전체 참가자 목록</div>
+          <div class="hint" style="margin-top:6px;">
+            지금은 참가자 목록만 보여줘요. 나중에 랭킹 계산을 붙이면 여기서 바로 등수 표로 확장할 거야.
+          </div>
+        </div>
+        <div class="pill">
+          <span>players:</span>
+          <strong id="count">loading…</strong>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div style="flex:1; min-width:220px;">
+          <input id="q" placeholder="이름/학교/선수로 검색" />
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="smallBtn" id="refreshBtn">새로고침</button>
+          <button class="smallBtn" onclick="location.href='players.html'">추가/수정</button>
+        </div>
+      </div>
+
+      <div style="overflow:auto; margin-top:8px;">
+        <table>
+          <thead>
+            <tr>
+              <!-- ✅ 나중에 랭킹 붙일 자리 -->
+              <th style="width:70px;">Rank</th>
+              <th>이름</th>
+              <th>학교</th>
+              <th style="width:70px;">나이</th>
+              <th>선수</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="5" class="muted">불러오는 중…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="msg" id="msg"></div>
+    </div>
   </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://bojzlfjtjzpdyhcyzzvu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u-o3XzuBwFRbG2woRNsPkA_GPlLIdE2";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const el = (id) => document.getElementById(id);
+    const tbody = el("tbody");
+    const count = el("count");
+    const msg = el("msg");
+    const q = el("q");
+
+    let allPlayers = [];
+
+    function setMsg(text, kind=""){
+      msg.className = "msg " + kind;
+      msg.textContent = text;
+    }
+
+    function escapeHTML(s){
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    async function fetchPlayers(){
+      const { data, error } = await supabase
+        .from("players")
+        .select("id, name, school, age, favorite_player, updated_at")
+        .order("name", { ascending: true });
+
+      if(error) throw error;
+      return data ?? [];
+    }
+
+    function render(list){
+      count.textContent = String(list.length);
+      tbody.innerHTML = "";
+
+      if(list.length === 0){
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">참가자가 아직 없어요. “추가/수정”에서 먼저 등록해줘.</td></tr>`;
+        return;
+      }
+
+      // ✅ 지금은 랭킹 계산이 없어서 Rank는 “—”로 둠
+      list.forEach((p) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="mono">—</td>
+          <td><strong>${escapeHTML(p.name)}</strong></td>
+          <td>${escapeHTML(p.school)}</td>
+          <td class="mono">${escapeHTML(p.age)}</td>
+          <td>${escapeHTML(p.favorite_player)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilter(){
+      const term = q.value.trim().toLowerCase();
+      if(!term) { render(allPlayers); return; }
+
+      const filtered = allPlayers.filter(p => {
+        const hay = `${p.name} ${p.school} ${p.favorite_player}`.toLowerCase();
+        return hay.includes(term);
+      });
+      render(filtered);
+    }
+
+    async function refresh(){
+      setMsg("불러오는 중…");
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">불러오는 중…</td></tr>`;
+      try{
+        allPlayers = await fetchPlayers();
+        setMsg("");
+        applyFilter();
+      }catch(e){
+        console.error(e);
+        setMsg("불러오기 실패: " + (e?.message || e), "bad");
+        count.textContent = "error";
+      }
+    }
+
+    el("refreshBtn").addEventListener("click", refresh);
+    q.addEventListener("input", applyFilter);
+
+    // ✅ (선택) players 변경 시 자동 반영
+    supabase.channel("players-realtime-index")
+      .on("postgres_changes", { event: "*", schema: "public", table: "players" }, () => refresh())
+      .subscribe();
+
+    await refresh();
+  </script>
 </body>
 </html>
