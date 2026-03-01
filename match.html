@@ -46,21 +46,40 @@
     .msg{margin-top:10px; font-size:13px;}
     .msg.good{color:var(--good)} .msg.bad{color:var(--bad)}
     .hint{color:var(--muted); font-size:13px; line-height:1.5;}
+    .mono{font-family:var(--mono);}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <button class="secondary" onclick="location.href='index.html'">← 홈</button>
-      <h1 id="title">Match</h1>
+      <h1 id="pageTitle">Match</h1>
       <div class="pill" id="sync">players: loading…</div>
     </header>
 
     <div class="card">
-      <div class="hint">
+      <div class="hint" id="hintText">
         한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).
       </div>
 
+      <!-- ✅ Singles: 형식 선택 화면 (format 없을 때 표시) -->
+      <div id="singlesPick" style="display:none; margin-top:12px;">
+        <div class="hint" style="margin-top:0;">
+          Singles 경기 형식을 선택해줘.
+        </div>
+
+        <div class="two" style="margin-top:12px;">
+          <button class="good" id="pick6">🎾 6-game (1 set)</button>
+          <button class="secondary" id="pick10">🔥 10-point Tiebreak</button>
+        </div>
+
+        <div class="hint" style="margin-top:10px;">
+          • 6-game: 예) 6:3, 7:5, 7:6<br/>
+          • 10TB: 타이브레이크 점수 (0~20, 승자 10점 이상 + 2점 차)
+        </div>
+      </div>
+
+      <!-- Singles / Doubles 선택 영역 -->
       <div id="singlesBlock">
         <div class="two">
           <div>
@@ -85,18 +104,20 @@
         </div>
       </div>
 
-      <div class="two" style="margin-top:10px;">
+      <!-- ✅ 점수 입력 블록 (숨김/표시를 이 블록으로만 제어) -->
+      <div id="scoreBlock" class="two" style="margin-top:10px;">
         <div>
-          <label>Games A</label>
+          <label id="labelA">Games A</label>
           <input id="gamesA" type="number" min="0" max="7" placeholder="예: 6" />
         </div>
         <div>
-          <label>Games B</label>
+          <label id="labelB">Games B</label>
           <input id="gamesB" type="number" min="0" max="7" placeholder="예: 3" />
         </div>
       </div>
 
-      <div class="two" style="margin-top:12px;">
+      <!-- ✅ 액션 버튼 블록 -->
+      <div id="actionBlock" class="two" style="margin-top:12px;">
         <button class="good" id="saveBtn">저장</button>
         <button class="secondary" onclick="location.href='players.html'">참가자 관리로</button>
       </div>
@@ -114,14 +135,26 @@
 
     const $ = (id)=>document.getElementById(id);
     const params = new URLSearchParams(location.search);
-    const mode = (params.get("mode") || "singles").toLowerCase();
 
-    const title = $("title");
+    const mode = (params.get("mode") || "singles").toLowerCase();
+    const format = (params.get("format") || "").toLowerCase(); // "6game" | "10tb" | ""
+
+    const pageTitle = $("pageTitle");
     const sync = $("sync");
     const msg = $("msg");
 
+    const hintText = $("hintText");
+
+    const singlesPick = $("singlesPick");
     const singlesBlock = $("singlesBlock");
     const doublesBlock = $("doublesBlock");
+    const scoreBlock = $("scoreBlock");
+    const actionBlock = $("actionBlock");
+
+    const labelA = $("labelA");
+    const labelB = $("labelB");
+    const inputA = $("gamesA");
+    const inputB = $("gamesB");
 
     function setMsg(text, kind=""){
       msg.className = "msg " + kind;
@@ -150,10 +183,10 @@
         return [];
       }
       sync.textContent = `players: ${data.length}`;
-      return data;
+      return data ?? [];
     }
 
-    function validateGames(a,b){
+    function validateGames6(a,b){
       if(!Number.isFinite(a) || !Number.isFinite(b)) return "게임 스코어를 입력해줘.";
       if(a === b) return "무승부는 안 돼.";
       if(a < 0 || b < 0 || a > 7 || b > 7) return "게임은 0~7 범위로 입력해줘.";
@@ -167,15 +200,66 @@
       return null;
     }
 
+    function validateTB10(a,b){
+      if(!Number.isFinite(a) || !Number.isFinite(b)) return "타이브레이크 점수를 입력해줘.";
+      if(a === b) return "무승부는 안 돼.";
+      if(a < 0 || b < 0 || a > 20 || b > 20) return "타이브레이크는 0~20 범위로 입력해줘.";
+
+      const hi = Math.max(a,b), lo = Math.min(a,b);
+      if(hi < 10) return "10점 타이브레이크는 승자가 최소 10점 이상이어야 해.";
+      if(hi - lo < 2) return "타이브레이크는 2점 차로 이겨야 해. (예: 10:8, 12:10, 20:18)";
+      return null;
+    }
+
     function allUnique(arr){
       const clean = arr.filter(Boolean);
       return new Set(clean).size === clean.length;
     }
 
+    function showSinglesPick(){
+      singlesPick.style.display = "block";
+      singlesBlock.style.display = "none";
+      doublesBlock.style.display = "none";
+      scoreBlock.style.display = "none";
+      actionBlock.style.display = "none";
+
+      hintText.textContent = "Singles 경기 형식을 선택해줘.";
+      setMsg("");
+
+      $("pick6").onclick = () => location.href = "match.html?mode=singles&format=6game";
+      $("pick10").onclick = () => location.href = "match.html?mode=singles&format=10tb";
+    }
+
+    function applySinglesFormatUI(fmt){
+      singlesPick.style.display = "none";
+      singlesBlock.style.display = "block";
+      doublesBlock.style.display = "none";
+      scoreBlock.style.display = "";
+      actionBlock.style.display = "";
+
+      if(fmt === "10tb"){
+        hintText.textContent = "10점 타이브레이크 점수를 입력해요. (0~20, 승자 10점 이상 + 2점 차)";
+        labelA.textContent = "TB Points A";
+        labelB.textContent = "TB Points B";
+        inputA.min = "0"; inputA.max = "20"; inputA.placeholder = "예: 10";
+        inputB.min = "0"; inputB.max = "20"; inputB.placeholder = "예: 8";
+      } else {
+        hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).";
+        labelA.textContent = "Games A";
+        labelB.textContent = "Games B";
+        inputA.min = "0"; inputA.max = "7"; inputA.placeholder = "예: 6";
+        inputB.min = "0"; inputB.max = "7"; inputB.placeholder = "예: 3";
+      }
+    }
+
     async function saveMatch(){
-      const gamesA = Number($("gamesA").value);
-      const gamesB = Number($("gamesB").value);
-      const err = validateGames(gamesA, gamesB);
+      const a = Number(inputA.value);
+      const b = Number(inputB.value);
+
+      let err = null;
+      if(mode === "singles" && format === "10tb") err = validateTB10(a, b);
+      else err = validateGames6(a, b);
+
       if(err){ setMsg(err, "bad"); return; }
 
       let team_a=[], team_b=[];
@@ -184,7 +268,7 @@
         if(!A || !B) { setMsg("플레이어 A/B를 선택해줘.", "bad"); return; }
         if(A===B) { setMsg("같은 사람을 둘 다 선택할 수 없어.", "bad"); return; }
         team_a=[A]; team_b=[B];
-      }else{
+      } else {
         const A1=$("dA1").value, A2=$("dA2").value, B1=$("dB1").value, B2=$("dB2").value;
         if(!A1||!A2||!B1||!B2){ setMsg("더블은 4명을 모두 선택해줘.", "bad"); return; }
         if(!allUnique([A1,A2,B1,B2])){ setMsg("더블에서 같은 사람을 중복 선택할 수 없어.", "bad"); return; }
@@ -196,29 +280,40 @@
         mode,
         team_a,
         team_b,
-        games_a: gamesA,
-        games_b: gamesB
+        games_a: a,
+        games_b: b
+        // 나중에 컬럼 추가하면 score_format: format
       });
 
       if(error){
         setMsg("저장 실패: " + error.message, "bad");
         return;
       }
+
       setMsg("저장 완료!", "good");
-      $("gamesA").value=""; $("gamesB").value="";
+      inputA.value = ""; inputB.value = "";
     }
 
-    // 화면 초기화
+    // ✅ 초기 화면 구성
     if(mode === "doubles"){
-      title.textContent = "Doubles Match";
+      pageTitle.textContent = "Doubles Match";
+      singlesPick.style.display = "none";
       singlesBlock.style.display = "none";
       doublesBlock.style.display = "block";
-    }else{
-      title.textContent = "Singles Match";
-      singlesBlock.style.display = "block";
-      doublesBlock.style.display = "none";
+      scoreBlock.style.display = "";
+      actionBlock.style.display = "";
+      hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).";
+    } else {
+      pageTitle.textContent = "Singles Match";
+      // singles인데 format 없으면 선택 화면
+      if(!["6game","10tb"].includes(format)){
+        showSinglesPick();
+      } else {
+        applySinglesFormatUI(format);
+      }
     }
 
+    // players 로딩/셀렉트 채우기
     const players = await loadPlayers();
     fillSelect($("sA"), players); fillSelect($("sB"), players);
     fillSelect($("dA1"), players); fillSelect($("dA2"), players);
