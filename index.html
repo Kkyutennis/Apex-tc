@@ -166,6 +166,7 @@
     const q = el("q");
 
     let allPlayers = [];
+    let rankingMap = new Map();
 
     function setMsg(text, kind=""){
       msg.className = "msg " + kind;
@@ -188,21 +189,112 @@
       return data ?? [];
     }
 
-    function render(list){
-      count.textContent = String(list.length);
-      tbody.innerHTML = "";
+    async function fetchMatches(){
+      const { data, error } = await supabase
+        .from("matches")
+        .select("id, mode, score_format, team_a, team_b, games_a, games_b, created_at")
+        .order("created_at", { ascending: true });
+    
+      if(error) throw error;
+      return data ?? [];
+    }
 
-      if(list.length === 0){
+    function computeRanking(players, matches){
+      const map = new Map();
+    
+      // 모든 플레이어 초기화
+      for(const p of players){
+        map.set(p.id, {
+          id: p.id,
+          points: 0,
+          matches: 0
+        });
+      }
+    
+      for(const m of matches){
+        const teamA = Array.isArray(m.team_a) ? m.team_a : [];
+        const teamB = Array.isArray(m.team_b) ? m.team_b : [];
+        const a = Number(m.games_a);
+        const b = Number(m.games_b);
+    
+        if(!Number.isFinite(a) || !Number.isFinite(b)) continue;
+    
+        const teamAWins = a > b;
+        const teamBWins = b > a;
+    
+        // 단식
+        if(m.mode === "singles" && teamA.length === 1 && teamB.length === 1){
+          const pA = map.get(teamA[0]);
+          const pB = map.get(teamB[0]);
+          if(!pA || !pB) continue;
+    
+          let scoreA = 0;
+          let scoreB = 0;
+    
+          if(m.score_format === "10tb"){
+            scoreA = teamAWins ? 4 : 0;
+            scoreB = teamBWins ? 4 : 0;
+          } else {
+            scoreA = (teamAWins ? 10 : 0) + (a - b);
+            scoreB = (teamBWins ? 10 : 0) + (b - a);
+          }
+    
+          pA.points += scoreA;
+          pB.points += scoreB;
+          pA.matches += 1;
+          pB.matches += 1;
+        }
+    
+        // 복식
+        else if(m.mode === "doubles" && teamA.length === 2 && teamB.length === 2){
+          const scoreA = (teamAWins ? 6 : 0) + (a - b);
+          const scoreB = (teamBWins ? 6 : 0) + (b - a);
+    
+          for(const id of teamA){
+            const p = map.get(id);
+            if(p){
+              p.points += scoreA;
+              p.matches += 1;
+            }
+          }
+    
+          for(const id of teamB){
+            const p = map.get(id);
+            if(p){
+              p.points += scoreB;
+              p.matches += 1;
+            }
+          }
+        }
+      }
+    
+      return map;
+    }
+    
+    function render(list){
+      tbody.innerHTML = "";
+    
+      const ranked = [...list].sort((x, y) => {
+        const rx = rankingMap.get(x.id)?.points ?? 0;
+        const ry = rankingMap.get(y.id)?.points ?? 0;
+        if(ry !== rx) return ry - rx;
+        return x.name.localeCompare(y.name, "ko");
+      });
+    
+      count.textContent = String(ranked.length);
+    
+      if(ranked.length === 0){
         tbody.innerHTML = `<tr><td colspan="5" class="muted">참가자가 아직 없어요. “추가/수정”에서 먼저 등록해줘.</td></tr>`;
         return;
       }
-
-      // ✅ 지금은 랭킹 계산이 없어서 Rank는 “—”로 둠
-      list.forEach((p) => {
+    
+      ranked.forEach((p, idx) => {
+        const pts = rankingMap.get(p.id)?.points ?? 0;
+    
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td class="mono">—</td>
-          <td><strong>${escapeHTML(p.name)}</strong></td>
+          <td class="mono">${idx + 1}</td>
+          <td><strong>${escapeHTML(p.name)}</strong><br><span class="muted">Pts: ${pts}</span></td>
           <td>${escapeHTML(p.school)}</td>
           <td class="mono">${escapeHTML(p.age)}</td>
           <td>${escapeHTML(p.favorite_player)}</td>
@@ -225,8 +317,16 @@
     async function refresh(){
       setMsg("불러오는 중…");
       tbody.innerHTML = `<tr><td colspan="5" class="muted">불러오는 중…</td></tr>`;
+    
       try{
-        allPlayers = await fetchPlayers();
+        const [players, matches] = await Promise.all([
+          fetchPlayers(),
+          fetchMatches()
+        ]);
+    
+        allPlayers = players;
+        rankingMap = computeRanking(players, matches);
+    
         setMsg("");
         applyFilter();
       }catch(e){
@@ -248,5 +348,6 @@
   </script>
 </body>
 </html>
+
 
 
