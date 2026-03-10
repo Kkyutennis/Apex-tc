@@ -275,12 +275,31 @@
       tbody.innerHTML = "";
     
       const ranked = [...list].sort((x, y) => {
-        const rx = rankingMap.get(x.id)?.points ?? 0;
-        const ry = rankingMap.get(y.id)?.points ?? 0;
-        if(ry !== rx) return ry - rx;
+        const sx = rankingMap.get(x.id) ?? { points: 0, matches: 0 };
+        const sy = rankingMap.get(y.id) ?? { points: 0, matches: 0 };
+      
+        const xPlayed = sx.matches > 0;
+        const yPlayed = sy.matches > 0;
+      
+        // 경기한 사람을 무조건 위로
+        if (xPlayed !== yPlayed) {
+          return yPlayed - xPlayed;
+        }
+      
+        // 둘 다 경기했으면 점수 높은 순
+        if (sy.points !== sx.points) {
+          return sy.points - sx.points;
+        }
+      
+        // 같으면 경기 수 많은 순
+        if (sy.matches !== sx.matches) {
+          return sy.matches - sx.matches;
+        }
+      
+        // 마지막은 이름순
         return x.name.localeCompare(y.name, "ko");
       });
-    
+          
       count.textContent = String(ranked.length);
     
       if(ranked.length === 0){
@@ -348,6 +367,7 @@
   </script>
 </body>
 </html>
+
 
 
 
