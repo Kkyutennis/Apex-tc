@@ -109,6 +109,33 @@
     <div class="card">
       <div class="row">
         <div>
+          <div style="font-size:16px; font-weight:700;">최근 10경기</div>
+          <div class="hint" style="margin-top:6px;">
+            가장 최근에 입력된 경기 결과 10개를 보여줘요.
+          </div>
+        </div>
+      </div>
+    
+      <div style="overflow:auto; margin-top:8px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:120px;">형식</th>
+              <th>대진</th>
+              <th style="width:90px;">점수</th>
+              <th style="width:170px;">입력 시각</th>
+            </tr>
+          </thead>
+          <tbody id="recentTbody">
+            <tr><td colspan="4" class="muted">불러오는 중…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div>
           <div style="font-size:16px; font-weight:700;">전체 참가자 목록</div>
           <div class="hint" style="margin-top:6px;">
             지금은 참가자 목록만 보여줘요. 나중에 랭킹 계산을 붙이면 여기서 바로 등수 표로 확장할 거야.
@@ -164,6 +191,7 @@
     const count = el("count");
     const msg = el("msg");
     const q = el("q");
+    const recentTbody = el("recentTbody");
 
     let allPlayers = [];
     let rankingMap = new Map();
@@ -189,6 +217,70 @@
       return data ?? [];
     }
 
+    async function fetchRecentMatches(){
+      const { data, error } = await supabase
+        .from("matches")
+        .select("id, mode, score_format, team_a, team_b, games_a, games_b, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+    
+      if(error) throw error;
+      return data ?? [];
+    }
+
+    function formatTeam(ids, playerMap){
+      if(!Array.isArray(ids)) return "-";
+      return ids.map(id => playerMap.get(id) || "Unknown").join(" / ");
+    }
+    
+    function formatMatchType(match){
+      if(match.mode === "doubles") return "Doubles";
+      if(match.mode === "singles" && match.score_format === "10tb") return "Singles TB";
+      return "Singles 6/4";
+    }
+    
+    function formatDateTime(iso){
+      if(!iso) return "-";
+      const d = new Date(iso);
+      if(Number.isNaN(d.getTime())) return "-";
+    
+      return d.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+    
+    function renderRecentMatches(matches, players){
+      recentTbody.innerHTML = "";
+    
+      if(!matches.length){
+        recentTbody.innerHTML = `<tr><td colspan="4" class="muted">최근 경기 기록이 없어요.</td></tr>`;
+        return;
+      }
+    
+      const playerMap = new Map(players.map(p => [p.id, p.name]));
+    
+      matches.forEach(m => {
+        const tr = document.createElement("tr");
+    
+        const left = formatTeam(m.team_a, playerMap);
+        const right = formatTeam(m.team_b, playerMap);
+        const score = `${m.games_a}:${m.games_b}`;
+    
+        tr.innerHTML = `
+          <td>${formatMatchType(m)}</td>
+          <td>${escapeHTML(left)} vs ${escapeHTML(right)}</td>
+          <td class="mono">${escapeHTML(score)}</td>
+          <td>${escapeHTML(formatDateTime(m.created_at))}</td>
+        `;
+    
+        recentTbody.appendChild(tr);
+      });
+    }
+    
     async function fetchMatches(){
       const { data, error } = await supabase
         .from("matches")
@@ -336,15 +428,18 @@
     async function refresh(){
       setMsg("불러오는 중…");
       tbody.innerHTML = `<tr><td colspan="5" class="muted">불러오는 중…</td></tr>`;
+      recentTbody.innerHTML = `<tr><td colspan="4" class="muted">불러오는 중…</td></tr>`;
     
       try{
-        const [players, matches] = await Promise.all([
+        const [players, matches, recentMatches] = await Promise.all([
           fetchPlayers(),
-          fetchMatches()
+          fetchMatches(),
+          fetchRecentMatches()
         ]);
     
         allPlayers = players;
         rankingMap = computeRanking(players, matches);
+        renderRecentMatches(recentMatches, players);
     
         setMsg("");
         applyFilter();
@@ -352,6 +447,7 @@
         console.error(e);
         setMsg("불러오기 실패: " + (e?.message || e), "bad");
         count.textContent = "error";
+        recentTbody.innerHTML = `<tr><td colspan="4" class="muted">최근 경기 불러오기 실패</td></tr>`;
       }
     }
 
@@ -367,6 +463,7 @@
   </script>
 </body>
 </html>
+
 
 
 
