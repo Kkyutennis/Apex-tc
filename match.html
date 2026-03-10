@@ -284,6 +284,7 @@
       setMsg("저장 중…");
       const { error } = await supabase.from("matches").insert({
         mode,
+        score_format: mode === "singles" ? format : null,
         team_a,
         team_b,
         games_a: a,
@@ -329,6 +330,7 @@
   </script>
 </body>
 </html>
+
 
 
 
