@@ -59,7 +59,7 @@
 
     <div class="card">
       <div class="hint" id="hintText">
-        한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).
+        한 세트 게임 스코어를 입력해요 (예: 6:3, 6:5, 4:2).
       </div>
 
       <!-- ✅ Singles: 형식 선택 화면 (format 없을 때 표시) -->
@@ -74,7 +74,7 @@
         </div>
 
         <div class="hint" style="margin-top:10px;">
-          • 6-game: 예) 6:3, 7:5, 7:6<br/>
+          • 6-game: 예) 6:3, 6:5, 4:2<br/>
           • 10TB: 타이브레이크 점수 (0~20, 승자 10점 이상 + 2점 차)
         </div>
       </div>
@@ -108,11 +108,11 @@
       <div id="scoreBlock" class="two" style="margin-top:10px;">
         <div>
           <label id="labelA">Games A</label>
-          <input id="gamesA" type="number" min="0" max="7" placeholder="예: 6" />
+          <input id="gamesA" type="number" min="0" max="6" placeholder="예: 6" />
         </div>
         <div>
           <label id="labelB">Games B</label>
-          <input id="gamesB" type="number" min="0" max="7" placeholder="예: 3" />
+          <input id="gamesB" type="number" min="0" max="6" placeholder="예: 3" />
         </div>
       </div>
 
@@ -189,14 +189,20 @@
     function validateGames6(a,b){
       if(!Number.isFinite(a) || !Number.isFinite(b)) return "게임 스코어를 입력해줘.";
       if(a === b) return "무승부는 안 돼.";
-      if(a < 0 || b < 0 || a > 7 || b > 7) return "게임은 0~7 범위로 입력해줘.";
-
-      const hi = Math.max(a,b), lo = Math.min(a,b);
-      const ok =
-        (hi === 6 && lo <= 4) ||
-        (hi === 7 && (lo === 5 || lo === 6));
-
-      if(!ok) return "가능한 한 세트 스코어 예: 6:3, 6:4, 7:5, 7:6";
+      if(a < 0 || b < 0 || a > 6 || b > 6) return "게임은 0~6 범위로 입력해줘.";
+    
+      const hi = Math.max(a,b);
+      const lo = Math.min(a,b);
+    
+      // 승자의 점수는 4 또는 6만 허용
+      if(!(hi === 4 || hi === 6)) {
+        return "승자의 점수는 4 또는 6이어야 해. (예: 4:2, 4:3, 6:3, 6:5)";
+      }
+    
+      // 진 쪽 점수는 승자보다 작아야 함
+      if(lo >= hi) {
+        return "올바른 스코어를 입력해줘.";
+      }
       return null;
     }
 
@@ -244,11 +250,11 @@
         inputA.min = "0"; inputA.max = "20"; inputA.placeholder = "예: 10";
         inputB.min = "0"; inputB.max = "20"; inputB.placeholder = "예: 8";
       } else {
-        hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).";
+        hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 6:5, 4:2).";
         labelA.textContent = "Games A";
         labelB.textContent = "Games B";
-        inputA.min = "0"; inputA.max = "7"; inputA.placeholder = "예: 6";
-        inputB.min = "0"; inputB.max = "7"; inputB.placeholder = "예: 3";
+        inputA.min = "0"; inputA.max = "6"; inputA.placeholder = "예: 6";
+        inputB.min = "0"; inputB.max = "6"; inputB.placeholder = "예: 3";
       }
     }
 
@@ -302,7 +308,7 @@
       doublesBlock.style.display = "block";
       scoreBlock.style.display = "";
       actionBlock.style.display = "";
-      hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 7:5, 7:6).";
+      hintText.textContent = "한 세트 게임 스코어를 입력해요 (예: 6:3, 6:5, 4:2).";
     } else {
       pageTitle.textContent = "Singles Match";
       // singles인데 format 없으면 선택 화면
@@ -323,3 +329,4 @@
   </script>
 </body>
 </html>
+
